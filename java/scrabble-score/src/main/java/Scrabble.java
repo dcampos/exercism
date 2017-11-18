@@ -19,9 +19,9 @@ class Scrabble {
 
     private void addValues(String string, int i) {
         string.chars().forEach(n -> values.put(n, i));
-	}
+    }
 
-	int getScore() {
+    int getScore() {
         return word.toLowerCase().chars()
             .map(n -> values.get(n)).sum();
     }
