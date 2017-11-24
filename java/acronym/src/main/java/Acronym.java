@@ -9,7 +9,7 @@ class Acronym {
     }
 
     String get() {
-        return Arrays.stream(phrase.split("-|, *| +"))
+        return Arrays.stream(phrase.split("\\W+"))
             .map(s -> s.substring(0, 1))
             .collect(Collectors.joining())
             .toUpperCase();
