@@ -1,5 +1,7 @@
 unit module NucleotideCount:ver<1>;
 
-sub nucleotide-count ($strand where { $strand ~~ /^<[ACGT]>*$/ }) is export {
+subset Strand of Str where /^<[ACGT]>*$/;
+
+sub nucleotide-count (Strand $strand) is export {
     $strand.comb;
 }
