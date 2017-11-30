@@ -1,131 +1,94 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 
 public static class Markdown
 {
+    private static Dictionary<string, string> Replacements = new Dictionary<string, string>() 
+    {
+        {"__", "strong"},
+        {"_", "em"},
+    };
+
     private static string Wrap(string text, string tag) => $"<{tag}>{text}</{tag}>";
 
-    private static bool IsTag(string text, string tag) => text.StartsWith("<{tag}>");
-
-    private static string Parse(string markdown, string delimiter, string tag)
+    private static string ParseText(string line)
     {
-        var pattern = delimiter + "(.+)" + delimiter;
-        var replacement = $"<{tag}>$1</{tag}>";
-        return Regex.Replace(markdown, pattern, replacement);
+        foreach (var item in Replacements.Keys)
+        {
+            string pattern = $"{item}(.*){item}";
+            string replacement = string.Format("<{0}>$1</{0}>", Replacements[item]);
+            line = Regex.Replace(line, pattern, replacement);
+        }
+        return line;
     }
 
-    private static string ParseBold(string markdown) => Parse(markdown, "__", "strong");
-
-    private static string ParseItalics(string markdown) => Parse(markdown, "_", "em");
-
-    private static string ParseText(string markdown, bool list)
+    private static string ParseHeader(string line)
     {
-        var parsedText = ParseItalics(ParseBold((markdown)));
-
-        if (list)
-        {
-            return parsedText;
-        }
-        else
-        {
-            return Wrap(parsedText, "p");
-        }
-    }
-
-    private static string ParseHeader(string markdown, bool list, out bool inListAfter)
-    {
-        var count = markdown.TakeWhile(c => c == '#').Count();
-
-        if (count == 0)
-        {
-            inListAfter = list;
-            return null;
-        }
+        var count = line.TakeWhile(c => c == '#').Count();
 
         var headerTag = "h" + count;
-        var headerHtml = Wrap(markdown.Substring(count + 1), headerTag);
+        var headerHtml = Wrap(line.Substring(count + 1), headerTag);
 
-        if (list)
-        {
-            inListAfter = false;
-            return "</ul>" + headerHtml;
+        return headerHtml;
+    }
+
+    private static string ParseListItem(string line, List<string> lines)
+    {
+        var innerHtml = Wrap(ParseText(line.Substring(2)), "li");
+
+        if (lines.Count > 0 && lines[0].StartsWith("*")) {
+            line = lines.RemoveFirst();
+            innerHtml += ParseListItem(line, lines);
         }
+
+        return innerHtml;
+    }
+
+    private static string ParseParagraph(string line)
+    {
+            return Wrap(ParseText(line), "p");
+    }
+
+    private static string ParseLine(string line, List<string> lines)
+    {
+        string result = "";
+
+        if (line.StartsWith('*'))
+            result = Wrap(ParseListItem(line, lines), "ul");
+        else if (line.StartsWith('#')) 
+            result = ParseHeader(line);
         else
-        {
-            inListAfter = false;
-            return headerHtml;
-        }
-    }
-
-    private static string ParseLineItem(string markdown, bool list, out bool inListAfter)
-    {
-        if (markdown.StartsWith("*"))
-        {
-            var innerHtml = Wrap(ParseText(markdown.Substring(2), true), "li");
-
-            inListAfter = true;
-
-            if (list)
-                return innerHtml;
-            else
-                return "<ul>" + innerHtml;
-        }
-
-        inListAfter = list;
-        return null;
-    }
-
-    private static string ParseParagraph(string markdown, bool list, out bool inListAfter)
-    {
-        inListAfter = false;
-        if (!list)
-            return ParseText(markdown, list);
-        else
-            return "</ul>" + ParseText(markdown, list);
-    }
-
-    private static string ParseLine(string markdown, bool list, out bool inListAfter)
-    {
-        var result = ParseHeader(markdown, list, out inListAfter);
+            result = ParseParagraph(line);
 
         if (result == null)
-        {
-            result = ParseLineItem(markdown, list, out inListAfter);
-        }
-
-        if (result == null)
-        {
-            result = ParseParagraph(markdown, list, out inListAfter);
-        }
-
-        if (result == null)
-        {
             throw new ArgumentException("Invalid markdown");
-        }
 
         return result;
     }
 
     public static string Parse(string markdown)
     {
-        var lines = markdown.Split('\n');
+        var lines = markdown.Split('\n').ToList();
         var result = "";
-        var list = false;
 
-        for (int i = 0; i < lines.Length; i++)
+        while (lines.Count > 0)
         {
-            var lineResult = ParseLine(lines[i], list, out list);
-            result += lineResult;
+            var line = lines.RemoveFirst();
+            result += ParseLine(line, lines);
         }
 
-        if (list)
-        {
-            return result + "</ul>";
-        }
-        else
-        {
-            return result;
-        }
+        return result;
+    }
+
+    public static T RemoveFirst<T>(this List<T> list)
+    {
+        if (list.Count < 1)
+            throw new ArgumentException("List cannot be empty.");
+
+        var item = list[0];
+        list.RemoveAt(0);
+        return item;
     }
 }
