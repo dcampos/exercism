@@ -1,0 +1,14 @@
+unit module RomanNumerals:ver<1>;
+
+my %table{Int} = <1000 900 500 400 100 90 50 40 10 9 5 4>
+                 Z=>
+                 <M CM D CD C XC L XL X IX V IV>;
+
+sub to-roman (Int $number is copy) is export {
+    my $roman = 'I' x $number;
+    for %table.keys.sort.reverse -> $k {
+        $roman ~~ s:g/'I' ** { $k }/{ %table{ $k } }/;
+    }
+    $roman;
+}
+
