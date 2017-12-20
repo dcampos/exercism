@@ -12,6 +12,6 @@ method add-minutes($minutes) {
 }
 
 method time() {
-    ($!minutes div 60 % 24, $!minutes % 60).fmt: '%02d', ':';
+    ($!minutes div 60 mod 24, $!minutes mod 60).fmt: '%02d', ':';
 }
 
