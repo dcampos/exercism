@@ -1,25 +1,13 @@
-"
-" Given a word and a list of possible anagrams, select the correct sublist.
-"
-" Hints:
-"
-"   - Same words don't match.
-"   - Cases are treated insensitivley.
-"   - The returned list is sorted.
-"
-" Example:
-"
-"   :echo Anagram('foo', ['foo', 'bar', 'oof', 'Ofo'])
-"   ['Ofo', 'oof']
-"
 function! Anagram(word, candidates) abort
     let ret = []
+    let wchars = sort(split(a:word, '\zs'), 'i')
 
     for c in a:candidates
-        if sort(split(c, '\zs')) == split(a:word, '\zs')
+        let cchars = sort(split(c, '\zs'), 'i')
+        if cchars ==? wchars && c !=? a:word
             call add(ret, c)
         endif
     endfor
 
-    return ret
+    return sort(ret)
 endfunction
