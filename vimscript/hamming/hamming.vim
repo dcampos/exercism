@@ -6,7 +6,7 @@ function! Hamming(strand1, strand2)
     let l:sum = 0
 
     for i in range(len(a:strand1))
-        let l:sum += a:strand1[i] != a:strand2[i] ? 1 : 0
+        let l:sum += a:strand1[i] != a:strand2[i]
     endfor
 
     return l:sum
