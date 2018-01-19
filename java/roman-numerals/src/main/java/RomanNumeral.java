@@ -1,4 +1,5 @@
 import static java.util.Collections.nCopies;
+import static java.lang.String.join;
 
 class RomanNumeral {
 
@@ -20,7 +21,7 @@ class RomanNumeral {
         for (int i = 0; i < numbers.length; i++) {
             int repeat = value / numbers[i];
             value -= numbers[i] * repeat;
-            result.append(String.join("", nCopies(repeat, symbols[i])));
+            result.append(join("", nCopies(repeat, symbols[i])));
         }
 
         return result.toString();
